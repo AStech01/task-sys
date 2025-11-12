@@ -1,0 +1,42 @@
+# Backend Node.js dependencies
+backend/node_modules/
+backend/npm-debug.log*
+backend/yarn-debug.log*
+backend/yarn-error.log*
+
+# Backend environment variables
+backend/.env
+
+# Backend build outputs
+backend/dist/
+
+# Frontend Node.js dependencies
+task-sys/node_modules/
+task-sys/dist/
+task-sys/.env.local
+task-sys/.env.development.local
+task-sys/.env.test.local
+task-sys/.env.production.local
+
+# Vite cache
+task-sys/.vite/
+
+# Logs
+*.log
+logs/
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# IDE/editor files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS generated files
+.DS_Store
+Thumbs.db
