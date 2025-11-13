@@ -1,51 +1,4 @@
 
-// import React, { useState, useEffect } from "react";
-// import API from "../api/api";
-
-// export default function CustomerForm({ onSuccess, existingCustomer }) {
-//   const [form, setForm] = useState({ name: "", email: "", phone: "" });
-
-//   useEffect(() => {
-//     if (existingCustomer) setForm(existingCustomer);
-//   }, [existingCustomer]);
-
-//   const handleChange = (e) => {
-//     setForm({ ...form, [e.target.name]: e.target.value });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     try {
-//       if (!form.name || !form.email || !form.phone) return alert("All fields required");
-
-//       if (existingCustomer) {
-//         await API.put(`/customers/${existingCustomer._id}`, form);
-//         alert("✅ Customer updated");
-//       } else {
-//         await API.post("/customers", form);
-//         alert("✅ Customer added");
-//       }
-//       setForm({ name: "", email: "", phone: "" });
-//       if (onSuccess) onSuccess();
-//     } catch (err) {
-//       console.error(err);
-//       alert("❌ Error saving customer");
-//     }
-//   };
-
-//   return (
-//     <div className="bg-white p-4 rounded shadow mb-4">
-//       <h3 className="font-semibold mb-2">{existingCustomer ? "Edit Customer" : "Add Customer"}</h3>
-//       <form onSubmit={handleSubmit} className="grid md:grid-cols-3 gap-4">
-//         <input type="text" name="name" placeholder="Name" value={form.name} onChange={handleChange} className="border p-2 rounded" />
-//         <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} className="border p-2 rounded" />
-//         <input type="text" name="phone" placeholder="Phone" value={form.phone} onChange={handleChange} className="border p-2 rounded" />
-//         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded md:col-span-3">{existingCustomer ? "Update" : "Add Customer"}</button>
-//       </form>
-//     </div>
-//   );
-// }
-
 
 import React, { useState, useEffect } from "react";
 import API from "../api/api";
@@ -68,17 +21,17 @@ export default function CustomerForm({ onSuccess, existingCustomer }) {
 
       if (existingCustomer) {
         await API.put(`/customers/${existingCustomer._id}`, form);
-        alert("✅ Customer updated successfully!");
+        alert(" Customer updated successfully!");
       } else {
         await API.post("/customers", form);
-        alert("✅ Customer added successfully!");
+        alert(" Customer added successfully!");
       }
 
       setForm({ name: "", email: "", phone: "" });
       if (onSuccess) onSuccess();
     } catch (err) {
       console.error(err);
-      alert("❌ Error saving customer");
+      alert(" Error saving customer");
     }
   };
 
