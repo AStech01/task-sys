@@ -1,80 +1,174 @@
-// import React from "react";
-// import { useEffect, useState } from "react";
-// import { getCustomers, addCustomer, deleteCustomer } from "../services/customerService";
+// import React, { useEffect, useState } from "react";
+// import API from "../api/api";
 // import CustomerForm from "../components/CustomerForm";
-// import CustomerCard from "../components/CustomerCard";
+// import { Link } from "react-router-dom";
 
 // export default function Customers() {
 //   const [customers, setCustomers] = useState([]);
+//   const [editCustomer, setEditCustomer] = useState(null);
 
-//   const load = () => getCustomers().then(setCustomers);
+//   const fetchCustomers = async () => {
+//     try {
+//       const res = await API.get("/customers");
+//       // eslint-disable-next-line no-console
+//       console.log("Customers API response:", res.data);
 
-//   useEffect(() => {
-//     load();
-//   }, []);
+//       const data = Array.isArray(res.data)
+//         ? res.data
+//         : Array.isArray(res.data?.data)
+//         ? res.data.data
+//         : Array.isArray(res.data?.customers)
+//         ? res.data.customers
+//         : [];
 
-//   const handleAdd = async (data) => {
-//     await addCustomer(data);
-//     load();
+//       setCustomers(data);
+//     } catch (err) {
+//       console.error("Error fetching customers:", err);
+//       setCustomers([]);
+//     }
 //   };
 
 //   const handleDelete = async (id) => {
-//     await deleteCustomer(id);
-//     load();
+//     if (!window.confirm("Delete this customer?")) return;
+//     await API.delete(`/customers/${id}`);
+//     fetchCustomers();
 //   };
 
+//   useEffect(() => { fetchCustomers(); }, []);
+
 //   return (
-//     <div className="p-8">
-//       <h2 className="text-2xl font-bold mb-6">Customers</h2>
-//       <CustomerForm onSubmit={handleAdd} />
-//       <div className="grid gap-4">
-//         {customers.map((c) => (
-//           <CustomerCard key={c._id} customer={c} onDelete={handleDelete} />
-//         ))}
-//       </div>
+//     <div className="max-w-5xl mx-auto p-4">
+//       <CustomerForm onSuccess={fetchCustomers} existingCustomer={editCustomer} />
+//       <h2 className="text-2xl font-semibold mb-4">Customers</h2>
+//       <table className="w-full bg-white shadow rounded">
+//         <thead className="bg-gray-100">
+//           <tr>
+//             <th className="p-2">Name</th>
+//             <th className="p-2">Email</th>
+//             <th className="p-2">Phone</th>
+//             <th className="p-2">Actions</th>
+//           </tr>
+//         </thead>
+//         <tbody>
+//           {customers.map(c => (
+//             <tr key={c._id} className="border-t hover:bg-gray-50">
+//               <td className="p-2"><Link to={`/customer/${c._id}`} className="text-blue-600">{c.name}</Link></td>
+//               <td className="p-2">{c.email}</td>
+//               <td className="p-2">{c.phone}</td>
+//               <td className="p-2 space-x-2">
+//                 <button className="text-green-600" onClick={() => setEditCustomer(c)}>Edit</button>
+//                 <button className="text-red-600" onClick={() => handleDelete(c._id)}>Delete</button>
+//               </td>
+//             </tr>
+//           ))}
+//         </tbody>
+//       </table>
 //     </div>
 //   );
 // }
 
 
-import { useEffect, useState } from "react";
-import axiosClient from "../api/axiosClient";
+import React, { useEffect, useState } from "react";
+import API from "../api/api";
 import CustomerForm from "../components/CustomerForm";
-import CustomerList from "../components/CustomerList";
+import { Link } from "react-router-dom";
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
-  const [editing, setEditing] = useState(null);
+  const [editCustomer, setEditCustomer] = useState(null);
 
-  const load = async () => {
-    const res = await axiosClient.get("/customers");
-    setCustomers(res.data);
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  const handleSubmit = async (data) => {
-    if (editing) {
-      await axiosClient.put(`/customers/${editing._id}`, data);
-      setEditing(null);
-    } else {
-      await axiosClient.post("/customers", data);
+  const fetchCustomers = async () => {
+    try {
+      const res = await API.get("/customers");
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data?.customers)
+        ? res.data.customers
+        : [];
+      setCustomers(data);
+    } catch (err) {
+      console.error("Error fetching customers:", err);
+      setCustomers([]);
     }
-    load();
   };
 
   const handleDelete = async (id) => {
-    await axiosClient.delete(`/customers/${id}`);
-    load();
+    if (!window.confirm("Are you sure you want to delete this customer?")) return;
+    try {
+      await API.delete(`/customers/${id}`);
+      fetchCustomers();
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to delete customer");
+    }
   };
 
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
   return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-4">Customers</h2>
-      <CustomerForm onSubmit={handleSubmit} editing={editing} />
-      <CustomerList data={customers} onEdit={setEditing} onDelete={handleDelete} />
+    <div className="max-w-6xl mx-auto p-4">
+      {/* Customer Form */}
+      <CustomerForm onSuccess={fetchCustomers} existingCustomer={editCustomer} />
+
+      <h2 className="text-3xl font-semibold mb-6 text-gray-800">Customer List</h2>
+
+      <div className="overflow-x-auto shadow-lg rounded-lg">
+        <table className="min-w-full bg-white">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="text-left p-4">Name</th>
+              <th className="text-left p-4">Email</th>
+              <th className="text-left p-4">Phone</th>
+              <th className="text-center p-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {customers.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="text-center p-4 text-gray-500">
+                  No customers found.
+                </td>
+              </tr>
+            ) : (
+              customers.map((c) => (
+                <tr
+                  key={c._id}
+                  className="border-b hover:bg-gray-50 transition-colors"
+                >
+                  <td className="p-4">
+                    <Link
+                      to={`/customer/${c._id}`}
+                      className="text-blue-600 font-medium hover:underline"
+                    >
+                      {c.name}
+                    </Link>
+                  </td>
+                  <td className="p-4">{c.email}</td>
+                  <td className="p-4">{c.phone}</td>
+                  <td className="p-4 text-center space-x-3">
+                    <button
+                      onClick={() => setEditCustomer(c)}
+                      className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(c._id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

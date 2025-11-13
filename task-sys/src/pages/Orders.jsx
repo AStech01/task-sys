@@ -1,91 +1,97 @@
-// import React from "react";
-// import { useEffect, useState } from "react";
-// import { getOrders, addOrder, deleteOrder } from "../services/orderService";
-// import { getCustomers } from "../services/customerService";
-// import OrderForm from "../components/OrderForm";
-// import OrderCard from "../components/OrderCard";
-
-// export default function Orders() {
-//   const [orders, setOrders] = useState([]);
-//   const [customers, setCustomers] = useState([]);
-
-//   const load = async () => {
-//     const [o, c] = await Promise.all([getOrders(), getCustomers()]);
-//     setOrders(o);
-//     setCustomers(c);
-//   };
-
-//   useEffect(() => {
-//     load();
-//   }, []);
-
-//   const handleAdd = async (data) => {
-//     await addOrder(data);
-//     load();
-//   };
-
-//   const handleDelete = async (id) => {
-//     await deleteOrder(id);
-//     load();
-//   };
-
-//   return (
-//     <div className="p-8">
-//       <h2 className="text-2xl font-bold mb-6">Orders</h2>
-//       <OrderForm onSubmit={handleAdd} customers={customers} />
-//       <div className="grid gap-4">
-//         {orders.map((o) => (
-//           <OrderCard key={o._id} order={o} onDelete={handleDelete} />
-//         ))}
-//       </div>
-//     </div>
-//   );
-// }
-
-
-import { useEffect, useState } from "react";
-import axiosClient from "../api/axiosClient";
+import React, { useEffect, useState } from "react";
+import API from "../api/api";
 import OrderForm from "../components/OrderForm";
-import OrderList from "../components/OrderList";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [editing, setEditing] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const load = async () => {
-    const [ordersRes, customersRes] = await Promise.all([
-      axiosClient.get("/orders"),
-      axiosClient.get("/customers"),
-    ]);
-    setOrders(ordersRes.data);
-    setCustomers(customersRes.data);
+  const fetchOrders = async () => {
+    try {
+      const res = await API.get("/orders");
+
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data?.orders)
+        ? res.data.orders
+        : [];
+
+      setOrders(data);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    load();
+    fetchOrders();
   }, []);
 
-  const handleSubmit = async (data) => {
-    if (editing) {
-      await axiosClient.put(`/orders/${editing._id}`, data);
-      setEditing(null);
-    } else {
-      await axiosClient.post("/orders", data);
-    }
-    load();
-  };
-
-  const handleDelete = async (id) => {
-    await axiosClient.delete(`/orders/${id}`);
-    load();
-  };
+  if (loading)
+    return (
+      <div className="text-center mt-10 text-gray-500">
+        Loading orders...
+      </div>
+    );
 
   return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-4">Orders</h2>
-      <OrderForm customers={customers} onSubmit={handleSubmit} editing={editing} />
-      <OrderList data={orders} onEdit={setEditing} onDelete={handleDelete} />
+    <div className="max-w-6xl mx-auto mt-8 p-4">
+      {/* Order Form */}
+      <OrderForm onSuccess={fetchOrders} />
+
+      <h2 className="text-3xl font-semibold mb-6 text-gray-800">Orders List</h2>
+
+      <div className="overflow-x-auto shadow-lg rounded-lg">
+        <table className="min-w-full bg-white divide-y divide-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="text-left p-4 font-medium text-gray-700">Product</th>
+              <th className="text-left p-4 font-medium text-gray-700">Quantity</th>
+              <th className="text-left p-4 font-medium text-gray-700">Price</th>
+              <th className="text-left p-4 font-medium text-gray-700">Status</th>
+              <th className="text-left p-4 font-medium text-gray-700">Customer</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {orders.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="text-center p-6 text-gray-500">
+                  No orders found.
+                </td>
+              </tr>
+            ) : (
+              orders.map((o) => (
+                <tr
+                  key={o._id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  <td className="p-4 font-medium text-gray-800">{o.product}</td>
+                  <td className="p-4">{o.quantity}</td>
+                  <td className="p-4">₹{o.price}</td>
+                  <td className="p-4">
+                    <span
+                      className={`capitalize px-3 py-1 rounded-full text-white text-sm ${
+                        o.status === "pending"
+                          ? "bg-yellow-500"
+                          : o.status === "shipped"
+                          ? "bg-blue-500"
+                          : "bg-green-500"
+                      }`}
+                    >
+                      {o.status}
+                    </span>
+                  </td>
+                  <td className="p-4">{o.customerId?.name || o.customer?.name || "N/A"}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
